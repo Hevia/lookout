@@ -1,12 +1,8 @@
-import asyncio
-import uuid
-
 from fastapi import Body, Request, FastAPI, HTTPException
-from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
-from commands import Command
+from instructions import Instructions
 from pyppeteer import launch
-
+from vizdiff import visual_inspection
 
 app = FastAPI()
 
@@ -26,9 +22,27 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+async def run_lookout(instructions: Instructions, photo_name: str):
+    browser = await launch()
+    page = await browser.newPage()
+    await page.goto(instructions.website)
+
+    for command in instructions.commands:
+        await command.execute(browser)
+    
+    save_path = f"photos/{instructions.project_id}/{photo_name}"
+    await page.screenshot({'path': save_path})
+    visual_inspection(instructions.project_id)
+
+
 @app.post("/seedProject")
-async def seedProject():
-    pass
+async def seedProject(instructions: Instructions):
+    await run_lookout(instructions, "previous.png")
+
+
+@app.post("/inspect")
+async def inspectProject(instructions: Instructions):
+    await run_lookout(instructions, "current.png")
 
 
 async def testPyppeteer():

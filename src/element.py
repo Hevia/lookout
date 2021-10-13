@@ -1,6 +1,8 @@
 from enum import Enum
 from typing import Optional
 
+from pyppeteer import browser
+
 class ElementType(Enum):
     INPUT = 1
     CHECKBOX = 2
@@ -15,3 +17,7 @@ class Element:
         id: str = element_id
         element_type: ElementType = element_type
         element_input: Optional[str] = element_input
+        element_action: Optional[ElementAction] = element_action
+
+    def execute(browser: browser.Browser):
+        pass
